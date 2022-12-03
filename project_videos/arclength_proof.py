@@ -21,6 +21,7 @@ from manim import (
     ReplacementTransform,
     Scene,
     Text,
+    TransformMatchingTex,
     VGroup,
     ValueTracker,
     Write,
@@ -38,7 +39,6 @@ class ArcLengthVisualizationScene(Scene):
         return np.sin(x) + 2 * np.cos(20 / 11 * x) + 4
         # return -(x**2) + 5
 
-    @staticmethod
     def construct(self):
         plane = Axes(x_range=self.x_range, y_range=[-2, 9], x_length=10, y_length=10)
         self.draw_graph(plane)
@@ -61,7 +61,6 @@ class ArcLengthVisualizationScene(Scene):
         number_of_lines_counter = Text("1").next_to(
             number_of_lines_label, RIGHT, buff=0.2
         )
-        self.play(Write(number_of_lines_label), Write(number_of_lines_counter))
 
         min = self.x_range[0]
         max = self.x_range[1]
@@ -121,7 +120,7 @@ class ArcLengthProofScene(Scene):
 
     @staticmethod
     def fx(x: float):
-        return np.sin(x * 1 / 4) + 2 * np.cos(15 / 11 * x) + 4
+        return np.sin(x * 1 / 4 + 0.1) + 2 * np.cos(15 / 11 * x) + 4
 
     def construct(self):
         plane = (
@@ -132,17 +131,69 @@ class ArcLengthProofScene(Scene):
                 y_length=7,
             )
             .move_to(RIGHT)
-            .shift(RIGHT * 2)
+            .shift(RIGHT * 1.2)
         )
         self.draw_graph(plane)
 
-    def arc_length_visualization(self, plane):
-        # distance_label = MathTex(r"d=\sqrt{x^2+y^2}").next_to(arc_line, LEFT, buff=0.2)
-        number_of_lines_label = MathTex("n=").move_to(UR).shift(RIGHT * 3).shift(UP * 2)
+    def draw_graph(self, plane):
+        axes_label = plane.get_axis_labels("x", "f(x)")
+
+        graph = plane.plot(self.fx, color=PURPLE).set_color_by_gradient(GREEN, BLUE)
+
+        self.play(DrawBorderThenFill(plane), Write(axes_label))
+        self.play(Create(graph), run_time=2)
+        self.wait()
+
+        x0, x1 = -5, 5
+        point0 = plane.c2p(x0, self.fx(x0))
+        point1 = plane.c2p(x1, self.fx(x1))
+
+        line = Line(point0, point1, color=RED)
+        line_brace = Brace(line, direction=line.copy().rotate(PI / 2).get_unit_vector())
+
+        x_label = MathTex(r"\Delta x")
+        y_label = MathTex(r"\Delta y")
+
+        x_brace = Brace(line).put_at_tip(x_label)
+        y_brace = Brace(line, direction=[1, 0, 0]).put_at_tip(y_label)
+
+        self.play(FadeIn(line))
+        self.play(FadeIn(line_brace))
+        self.play(FadeIn(x_brace, x_label))
+        self.play(FadeIn(y_brace, y_label))
+
+        distance_formula = (
+            MathTex(r"s=\sqrt{(\Delta x)^2+(\Delta y)^2}")
+            .move_to(UL)
+            .shift(UL * 2)
+            .shift(LEFT)
+        )
+        summation = MathTex(
+            r"=\sum_{i=1}^{n} \sqrt{(\Delta x)^2+(\Delta y)^2}"
+        ).next_to(distance_formula, DOWN, buff=0.2)
+
+        self.play(FadeIn(distance_formula))
+        self.play(ReplacementTransform(distance_formula.copy(), summation))
+        self.play(FadeOut(line, line_brace))
+        self.play(FadeOut(x_brace, x_label))
+        self.play(FadeOut(y_brace, y_label))
+
+        number_of_lines_label = MathTex("n=").move_to(UP).shift(UP * 1.0)
         number_of_lines_counter = MathTex("1").next_to(
             number_of_lines_label, RIGHT, buff=0.2
         )
-        self.play(Write(number_of_lines_label), Write(number_of_lines_counter))
+        summation_replacement = (
+            MathTex(r"=\sum_{i=1}^{n}")
+            .next_to(distance_formula, DOWN, buff=0.2)
+            .shift(LEFT * 0.4)
+        )
+        self.play(
+            ReplacementTransform(
+                summation_replacement,
+                VGroup(number_of_lines_label, number_of_lines_counter),
+                run_time=2,
+            )
+        )
 
         min = self.x_range[0]
         max = self.x_range[1]
@@ -173,7 +224,7 @@ class ArcLengthProofScene(Scene):
                 else ReplacementTransform(past_lines, current_lines)
             )
             updated_NOL_counter = MathTex(str(num_lines)).next_to(
-                number_of_lines_label, RIGHT, buff=0.1
+                number_of_lines_label, RIGHT, buff=0.2
             )
             update_label_animation = ReplacementTransform(
                 number_of_lines_counter, updated_NOL_counter
@@ -185,37 +236,26 @@ class ArcLengthProofScene(Scene):
             past_lines = current_lines
             number_of_lines_counter = updated_NOL_counter
 
-    def draw_graph(self, plane):
-        axes_label = plane.get_axis_labels("x", "f(x)")
-
-        graph = plane.plot(self.fx, color=PURPLE).set_color_by_gradient(GREEN, BLUE)
-
-        self.play(DrawBorderThenFill(plane), Write(axes_label))
-        self.play(Create(graph), run_time=2)
-        self.wait()
-
-        x0, x1 = -5, 5
-        point0 = plane.c2p(x0, self.fx(x0))
-        point1 = plane.c2p(x1, self.fx(x1))
-
-        line = Line(point0, point1, color=RED)
-        line_brace = Brace(line, direction=line.copy().rotate(PI / 2).get_unit_vector())
-
-        self.play(FadeIn(line))
-        self.play(FadeIn(line_brace))
-
-        distance_formula = (
-            MathTex(r"s=\sqrt{(\Delta x)^2+(\Delta y)^2}")
-            .move_to(UL)
-            .shift(UL * 2)
-            .shift(LEFT)
+        infinity_counter = MathTex(r"\infty").next_to(
+            number_of_lines_label, RIGHT, buff=0.1
         )
-        summation = MathTex(
-            r"=\sum_{i=1}^{n} \sqrt{(\Delta x)^2+(\Delta y)^2}"
+        self.play(ReplacementTransform(number_of_lines_counter, infinity_counter))
+
+        # summation_step_2 = MathTex(
+        #     r"=\sum_{i=1}^{n} \sqrt{\Delta x^2+\Delta y^2 \frac{\Delta x^2}{\Delta x^2}}"
+        # ).next_to(distance_formula, DOWN, buff=0.2)
+        summation_step_2 = MathTex(
+            r"=\sum_{i=1}^{n}",
+            r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
         ).next_to(distance_formula, DOWN, buff=0.2)
 
-        self.play(FadeIn(distance_formula))
-        self.play(ReplacementTransform(distance_formula.copy(), summation))
-        self.play(FadeOut(line, line_brace))
+        self.play(
+            ReplacementTransform(summation, summation_step_2), FadeOut(infinity_counter)
+        )
 
-        self.arc_length_visualization(plane)
+        summation_step_2 = MathTex(
+            r"=\sum_{i=1}^{n}",
+            r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
+        ).next_to(distance_formula, DOWN, buff=0.2)
+
+        # self.play(Write(summation_step_3), FadeOut(infinity_counter))
