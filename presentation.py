@@ -3,7 +3,7 @@ from manim_slides import Slide, ThreeDSlide
 import numpy as np
 
 
-class ArcLengthVisualizationScene(Scene):
+class ArcLengthVisualizationScene(Slide):
     x_range = [-5, 5, 1]
 
     @staticmethod
@@ -15,6 +15,7 @@ class ArcLengthVisualizationScene(Scene):
         plane = Axes(x_range=self.x_range, y_range=[-2, 9], x_length=10, y_length=10)
         self.draw_graph(plane)
         self.arc_length_visualization(plane)
+        self.wait()
 
     def draw_graph(self, plane):
         axes_label = plane.get_axis_labels("x", "f(x)")
@@ -85,9 +86,10 @@ class ArcLengthVisualizationScene(Scene):
         self.play(
             FadeIn(limit_of_arc_length), FadeOut(past_lines), update_label_animation
         )
+        self.wait()
 
 
-class ArcLengthProofScene(Scene):
+class ArcLengthProofScene(Slide):
     x_range = [-5, 5, 1]
 
     @staticmethod
@@ -229,6 +231,7 @@ class ArcLengthProofScene(Scene):
             r"=\sum_{i=1}^{n}",
             r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
         ).next_to(distance_formula, DOWN, buff=0.2)
+        self.wait()
 
         # self.play(Write(summation_step_3), FadeOut(infinity_counter))
 
