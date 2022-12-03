@@ -3,7 +3,7 @@ from manim_slides import Slide, ThreeDSlide
 import numpy as np
 
 
-class ArcLengthVisualizationScene(Slide):
+class ArcLengthVisualizationScene(Scene):
     x_range = [-5, 5, 1]
 
     @staticmethod
@@ -33,7 +33,6 @@ class ArcLengthVisualizationScene(Slide):
         number_of_lines_counter = Text("1").next_to(
             number_of_lines_label, RIGHT, buff=0.2
         )
-        self.play(Write(number_of_lines_label), Write(number_of_lines_counter))
 
         min = self.x_range[0]
         max = self.x_range[1]
@@ -88,12 +87,12 @@ class ArcLengthVisualizationScene(Slide):
         )
 
 
-class ArcLengthProofScene(Slide):
+class ArcLengthProofScene(Scene):
     x_range = [-5, 5, 1]
 
     @staticmethod
     def fx(x: float):
-        return np.sin(x * 1 / 4) + 2 * np.cos(15 / 11 * x) + 4
+        return np.sin(x * 1 / 4 + 0.1) + 2 * np.cos(15 / 11 * x) + 4
 
     def construct(self):
         plane = (
@@ -104,17 +103,69 @@ class ArcLengthProofScene(Slide):
                 y_length=7,
             )
             .move_to(RIGHT)
-            .shift(RIGHT * 2)
+            .shift(RIGHT * 1.2)
         )
         self.draw_graph(plane)
 
-    def arc_length_visualization(self, plane):
-        # distance_label = MathTex(r"d=\sqrt{x^2+y^2}").next_to(arc_line, LEFT, buff=0.2)
-        number_of_lines_label = MathTex("n=").move_to(UR).shift(RIGHT * 3).shift(UP * 2)
+    def draw_graph(self, plane):
+        axes_label = plane.get_axis_labels("x", "f(x)")
+
+        graph = plane.plot(self.fx, color=PURPLE).set_color_by_gradient(GREEN, BLUE)
+
+        self.play(DrawBorderThenFill(plane), Write(axes_label))
+        self.play(Create(graph), run_time=2)
+        self.wait()
+
+        x0, x1 = -5, 5
+        point0 = plane.c2p(x0, self.fx(x0))
+        point1 = plane.c2p(x1, self.fx(x1))
+
+        line = Line(point0, point1, color=RED)
+        line_brace = Brace(line, direction=line.copy().rotate(PI / 2).get_unit_vector())
+
+        x_label = MathTex(r"\Delta x")
+        y_label = MathTex(r"\Delta y")
+
+        x_brace = Brace(line).put_at_tip(x_label)
+        y_brace = Brace(line, direction=[1, 0, 0]).put_at_tip(y_label)
+
+        self.play(FadeIn(line))
+        self.play(FadeIn(line_brace))
+        self.play(FadeIn(x_brace, x_label))
+        self.play(FadeIn(y_brace, y_label))
+
+        distance_formula = (
+            MathTex(r"s=\sqrt{(\Delta x)^2+(\Delta y)^2}")
+            .move_to(UL)
+            .shift(UL * 2)
+            .shift(LEFT)
+        )
+        summation = MathTex(
+            r"=\sum_{i=1}^{n} \sqrt{(\Delta x)^2+(\Delta y)^2}"
+        ).next_to(distance_formula, DOWN, buff=0.2)
+
+        self.play(FadeIn(distance_formula))
+        self.play(ReplacementTransform(distance_formula.copy(), summation))
+        self.play(FadeOut(line, line_brace))
+        self.play(FadeOut(x_brace, x_label))
+        self.play(FadeOut(y_brace, y_label))
+
+        number_of_lines_label = MathTex("n=").move_to(UP).shift(UP * 1.0)
         number_of_lines_counter = MathTex("1").next_to(
             number_of_lines_label, RIGHT, buff=0.2
         )
-        self.play(Write(number_of_lines_label), Write(number_of_lines_counter))
+        summation_replacement = (
+            MathTex(r"=\sum_{i=1}^{n}")
+            .next_to(distance_formula, DOWN, buff=0.2)
+            .shift(LEFT * 0.4)
+        )
+        self.play(
+            ReplacementTransform(
+                summation_replacement,
+                VGroup(number_of_lines_label, number_of_lines_counter),
+                run_time=2,
+            )
+        )
 
         min = self.x_range[0]
         max = self.x_range[1]
@@ -145,7 +196,7 @@ class ArcLengthProofScene(Slide):
                 else ReplacementTransform(past_lines, current_lines)
             )
             updated_NOL_counter = MathTex(str(num_lines)).next_to(
-                number_of_lines_label, RIGHT, buff=0.1
+                number_of_lines_label, RIGHT, buff=0.2
             )
             update_label_animation = ReplacementTransform(
                 number_of_lines_counter, updated_NOL_counter
@@ -156,42 +207,30 @@ class ArcLengthProofScene(Slide):
 
             past_lines = current_lines
             number_of_lines_counter = updated_NOL_counter
-            self.wait()
 
-    def draw_graph(self, plane):
-        axes_label = plane.get_axis_labels("x", "f(x)")
-
-        graph = plane.plot(self.fx, color=PURPLE).set_color_by_gradient(GREEN, BLUE)
-
-        self.play(DrawBorderThenFill(plane), Write(axes_label))
-        self.play(Create(graph), run_time=2)
-        self.wait()
-
-        x0, x1 = -5, 5
-        point0 = plane.c2p(x0, self.fx(x0))
-        point1 = plane.c2p(x1, self.fx(x1))
-
-        line = Line(point0, point1, color=RED)
-        line_brace = Brace(line, direction=line.copy().rotate(PI / 2).get_unit_vector())
-
-        self.play(FadeIn(line))
-        self.play(FadeIn(line_brace))
-
-        distance_formula = (
-            MathTex(r"s=\sqrt{(\Delta x)^2+(\Delta y)^2}")
-            .move_to(UL)
-            .shift(UL * 2)
-            .shift(LEFT)
+        infinity_counter = MathTex(r"\infty").next_to(
+            number_of_lines_label, RIGHT, buff=0.1
         )
-        summation = MathTex(
-            r"=\sum_{i=1}^{n} \sqrt{(\Delta x)^2+(\Delta y)^2}"
+        self.play(ReplacementTransform(number_of_lines_counter, infinity_counter))
+
+        # summation_step_2 = MathTex(
+        #     r"=\sum_{i=1}^{n} \sqrt{\Delta x^2+\Delta y^2 \frac{\Delta x^2}{\Delta x^2}}"
+        # ).next_to(distance_formula, DOWN, buff=0.2)
+        summation_step_2 = MathTex(
+            r"=\sum_{i=1}^{n}",
+            r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
         ).next_to(distance_formula, DOWN, buff=0.2)
 
-        self.play(FadeIn(distance_formula))
-        self.play(ReplacementTransform(distance_formula.copy(), summation))
-        self.play(FadeOut(line, line_brace))
+        self.play(
+            ReplacementTransform(summation, summation_step_2), FadeOut(infinity_counter)
+        )
 
-        self.arc_length_visualization(plane)
+        summation_step_2 = MathTex(
+            r"=\sum_{i=1}^{n}",
+            r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
+        ).next_to(distance_formula, DOWN, buff=0.2)
+
+        # self.play(Write(summation_step_3), FadeOut(infinity_counter))
 
 
 class SA_RectPrism(ThreeDSlide):
@@ -230,6 +269,7 @@ class SA_RectPrism(ThreeDSlide):
         self.stop_ambient_camera_rotation()
         self.wait()
 
+
 class SA_Deconstruction(ThreeDSlide):
     def construct(self):
 
@@ -246,15 +286,15 @@ class SA_Deconstruction(ThreeDSlide):
             .add_coordinates()
         )
 
-        graph = axes.plot(lambda x: 0.25 * x ** 2, x_range=[0, 4], color=YELLOW)
+        graph = axes.plot(lambda x: 0.25 * x**2, x_range=[0, 4], color=YELLOW)
 
         surface = always_redraw(
             lambda: Surface(
                 lambda u, v: axes.c2p(
-                    v, 0.25 * v ** 2 * np.cos(u), 0.25 * v ** 2 * np.sin(u)
+                    v, 0.25 * v**2 * np.cos(u), 0.25 * v**2 * np.sin(u)
                 ),
-                u_range = [0, 2 * PI],
-                v_range = [0, 4],
+                u_range=[0, 2 * PI],
+                v_range=[0, 4],
                 checkerboard_colors=[BLUE_B, BLUE_D],
             )
         )
@@ -275,8 +315,8 @@ class SA_Deconstruction(ThreeDSlide):
         truncated_cone = always_redraw(
             lambda: Surface(
                 lambda u, v: axes.c2p(v, v * np.cos(u), v * np.sin(u)),
-                u_range = [0, 2 * PI],
-                v_range = [0, dist.get_value()],
+                u_range=[0, 2 * PI],
+                v_range=[0, dist.get_value()],
                 checkerboard_colors=[RED, GREEN],
                 opacity=0.6,
             )
@@ -446,6 +486,7 @@ class SA_Deconstruction(ThreeDSlide):
         self.play(Transform(radius_text.copy(), sa_formula[1]))
         self.wait()
 
+
 class SA_Accumulation(ThreeDSlide):
     def construct(self):
 
@@ -460,12 +501,12 @@ class SA_Accumulation(ThreeDSlide):
         ).to_edge(LEFT)
         axes.add_coordinates()
 
-        graph = axes.plot(lambda x: 0.25 * x ** 2, x_range=[0, 4], color=YELLOW)
+        graph = axes.plot(lambda x: 0.25 * x**2, x_range=[0, 4], color=YELLOW)
 
         surface = always_redraw(
             lambda: Surface(
                 lambda u, v: axes.c2p(
-                    v, 0.25 * v ** 2 * np.cos(u), 0.25 * v ** 2 * np.sin(u)
+                    v, 0.25 * v**2 * np.cos(u), 0.25 * v**2 * np.sin(u)
                 ),
                 u_range=[0, 2 * PI],
                 v_range=[0, 4],
@@ -492,7 +533,7 @@ class SA_Accumulation(ThreeDSlide):
         ).to_edge(DR)
 
         def sa_func(x):
-            return 6.2832 * x * (1 + (x ** 2 / 4)) ** 0.5
+            return 6.2832 * x * (1 + (x**2 / 4)) ** 0.5
 
         graph2 = axes2.plot(sa_func, x_range=[0, 4], color=BLUE)
         graph2_lab = Tex("SA Function").next_to(axes2, UP, buff=0.2)
@@ -531,6 +572,7 @@ class SA_Accumulation(ThreeDSlide):
         self.add(graph2, graph2_lab)
         self.wait()
 
+
 class SA_Example_ArcLength(Slide):
     def construct(self):
 
@@ -543,7 +585,7 @@ class SA_Example_ArcLength(Slide):
         ).to_edge(LEFT)
         axes.add_coordinates()
 
-        graph = axes.plot(lambda x: 0.25 * x ** 2, x_range=[0, 4], color=YELLOW)
+        graph = axes.plot(lambda x: 0.25 * x**2, x_range=[0, 4], color=YELLOW)
 
         # Mobjects for explaining construction of Line Integral
         dist = ValueTracker(1)
@@ -657,6 +699,7 @@ class SA_Example_ArcLength(Slide):
         self.play(dx_tracker.animate.set_value(0.2), Create(box), run_time=8)
         self.wait()
 
+
 class SA_Example_Calculation(ThreeDSlide):
     def construct(self):
 
@@ -669,7 +712,7 @@ class SA_Example_Calculation(ThreeDSlide):
             z_length=5,
         ).to_edge(LEFT)
         axes.add_coordinates()
-        graph = axes.plot(lambda x: 0.25 * x ** 2, x_range=[0, 4], color=YELLOW)
+        graph = axes.plot(lambda x: 0.25 * x**2, x_range=[0, 4], color=YELLOW)
         graph_lab = (
             MathTex("y=\\frac{x^2}{4}")
             .scale(0.8)
@@ -680,7 +723,7 @@ class SA_Example_Calculation(ThreeDSlide):
         surface = always_redraw(
             lambda: Surface(
                 lambda u, v: axes.c2p(
-                    v, 0.25 * v ** 2 * np.cos(u), 0.25 * v ** 2 * np.sin(u)
+                    v, 0.25 * v**2 * np.cos(u), 0.25 * v**2 * np.sin(u)
                 ),
                 u_range=[0, 2 * PI],
                 v_range=[0, 4],
@@ -731,6 +774,7 @@ class SA_Example_Calculation(ThreeDSlide):
         self.play(dx.animate.set_value(0.1), Write(solve5), run_time=2)
         self.wait()
 
+
 # HELPER FUNCTIONS
 def get_arc_lines(
     graph, plane, dx=1, x_min=None, x_max=None, line_color=RED, line_width=3
@@ -759,6 +803,7 @@ def get_arc_lines(
 
     return result
 
+
 def get_conic_approximations(
     axes, graph, x_min=0, x_max=1, dx=0.5, color_A=RED, color_B=GREEN, opacity=1
 ):
@@ -778,6 +823,7 @@ def get_conic_approximations(
             )
         result.add(conic_surface)
     return result
+
 
 def get_riemann_truncated_cones(
     axes,
