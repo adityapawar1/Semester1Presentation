@@ -1,6 +1,7 @@
 from manim import (
     BLUE,
     DOWN,
+    DR,
     GREEN,
     LEFT,
     PI,
@@ -17,6 +18,7 @@ from manim import (
     FadeOut,
     Line,
     MathTex,
+    MoveToTarget,
     NumberPlane,
     ReplacementTransform,
     Scene,
@@ -149,7 +151,10 @@ class ArcLengthProofScene(Scene):
         point1 = plane.c2p(x1, self.fx(x1))
 
         line = Line(point0, point1, color=RED)
-        line_brace = Brace(line, direction=line.copy().rotate(PI / 2).get_unit_vector())
+        s = MathTex("s")
+        line_brace = Brace(
+            line, direction=line.copy().rotate(PI / 2).get_unit_vector()
+        ).put_at_tip(s)
 
         x_label = MathTex(r"\Delta x")
         y_label = MathTex(r"\Delta y")
@@ -159,6 +164,7 @@ class ArcLengthProofScene(Scene):
 
         self.play(FadeIn(line))
         self.play(FadeIn(line_brace))
+        self.play(FadeIn(s))
         self.play(FadeIn(x_brace, x_label))
         self.play(FadeIn(y_brace, y_label))
 
@@ -172,7 +178,8 @@ class ArcLengthProofScene(Scene):
             r"=\sum_{i=1}^{n} \sqrt{(\Delta x)^2+(\Delta y)^2}"
         ).next_to(distance_formula, DOWN, buff=0.2)
 
-        self.play(FadeIn(distance_formula))
+        self.play(Write(distance_formula))
+        self.wait()
         self.play(ReplacementTransform(distance_formula.copy(), summation))
         self.play(FadeOut(line, line_brace))
         self.play(FadeOut(x_brace, x_label))
@@ -241,21 +248,108 @@ class ArcLengthProofScene(Scene):
         )
         self.play(ReplacementTransform(number_of_lines_counter, infinity_counter))
 
-        # summation_step_2 = MathTex(
-        #     r"=\sum_{i=1}^{n} \sqrt{\Delta x^2+\Delta y^2 \frac{\Delta x^2}{\Delta x^2}}"
-        # ).next_to(distance_formula, DOWN, buff=0.2)
         summation_step_2 = MathTex(
-            r"=\sum_{i=1}^{n}",
-            r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
+            r"=\sum_{i=1}^{n} \sqrt{\Delta x^2+\Delta y^2 \frac{\Delta x^2}{\Delta x^2}}"
         ).next_to(distance_formula, DOWN, buff=0.2)
 
         self.play(
-            ReplacementTransform(summation, summation_step_2), FadeOut(infinity_counter)
+            ReplacementTransform(summation, summation_step_2),
+            FadeOut(infinity_counter, number_of_lines_label),
         )
 
-        summation_step_2 = MathTex(
+        # summation_step_2 = MathTex(
+        #     r"=\sum_{i=1}^{n}",
+        #     r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
+        # ).next_to(distance_formula, DOWN, buff=0.2)
+
+        summation_step_3_anim = (
+            MathTex(
+                r"\Delta y^2",
+                r"{\Delta x^2",
+                r"\over",
+                r"\Delta x^2}",
+            )
+            .next_to(summation_step_2, DR, buff=0.2)
+            .shift(LEFT * 2.0)
+        )
+        summation_step_3_anim_swap = (
+            MathTex(
+                r"\Delta x^2",
+                r"{\Delta y^2",
+                r"\over",
+                r"\Delta x^2}",
+            )
+            .next_to(summation_step_2, DR, buff=0.2)
+            .shift(LEFT * 2.0)
+        )
+
+        self.play(Write(summation_step_3_anim))
+        self.play(
+            TransformMatchingTex(summation_step_3_anim, summation_step_3_anim_swap)
+        )
+        self.play(FadeOut(summation_step_3_anim_swap))
+
+        summation_step_3 = MathTex(
             r"=\sum_{i=1}^{n}",
             r"\sqrt{\Delta x^2 + \Delta x^2 \frac{\Delta y^2}{\Delta x^2}}",
-        ).next_to(distance_formula, DOWN, buff=0.2)
+        ).next_to(summation_step_2, DOWN, buff=0.2)
 
-        # self.play(Write(summation_step_3), FadeOut(infinity_counter))
+        self.play(Write(summation_step_3))
+        self.wait()
+
+        summation_step_4 = MathTex(
+            r"=\sum_{i=1}^{n}",
+            r"\sqrt{\Delta x^2(1 + \frac{\Delta y^2}{\Delta x^2})}",
+        ).next_to(summation_step_3, DOWN, buff=0.2)
+
+        self.play(Write(summation_step_4))
+        self.wait()
+
+        summation_step_5 = MathTex(
+            r"=\sum_{i=1}^{n}",
+            r"\sqrt{(1 + \frac{\Delta y^2}{\Delta x^2})}\Delta x",
+        ).next_to(summation_step_4, DOWN, buff=0.2)
+
+        self.play(Write(summation_step_5))
+        self.wait()
+
+        summation_step_6 = MathTex(
+            r"=\lim_{n \to \infty}",
+            r"\sum_{i=1}^{n}",
+            r"\sqrt{(1 + \frac{\Delta y^2}{\Delta x^2}}\Delta x",
+        ).next_to(summation_step_5, DOWN, buff=0.2)
+
+        self.play(
+            FadeOut(
+                distance_formula,
+                summation,
+                summation_replacement,
+                summation_step_2,
+                summation_step_3,
+                summation_step_4,
+                summation_step_5,
+            )
+        )
+        summations_steps = VGroup(summation_step_6).shift(UP * 7)
+        self.play(Write(summations_steps))
+        self.wait()
+
+        summation_step_7 = MathTex(
+            r"=\lim_{n \to \infty} \sum_{i=1}^{n} \sqrt{(1 + (\frac{\Delta y}{\Delta x})^2}\Delta x"
+        ).next_to(summation_step_6, DOWN, buff=0.2)
+        self.play(Write(summation_step_7))
+        self.wait()
+
+        summation_step_8 = MathTex(
+            r"s=\int_{a}^{b}",
+            r"\sqrt{(1 + \frac{dy}{dx}^2}dx",
+        ).next_to(summation_step_7, DOWN, buff=0.2)
+        self.play(Write(summation_step_8))
+        self.wait()
+
+        summation_step_9 = MathTex(
+            r"s=\int_{a}^{b}",
+            r"\sqrt{(1 + {f'(x)}^2}dx",
+        ).next_to(summation_step_8, DOWN, buff=0.2)
+        self.play(Write(summation_step_9))
+        self.wait()
