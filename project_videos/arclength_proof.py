@@ -316,7 +316,7 @@ class ArcLengthProofScene(Scene):
         summation_step_6 = MathTex(
             r"=\lim_{n \to \infty}",
             r"\sum_{i=1}^{n}",
-            r"\sqrt{(1 + \frac{\Delta y^2}{\Delta x^2}}\Delta x",
+            r"\sqrt{(1 + \frac{\Delta y^2}{\Delta x^2})}\Delta x",
         ).next_to(summation_step_5, DOWN, buff=0.2)
 
         self.play(
@@ -335,21 +335,21 @@ class ArcLengthProofScene(Scene):
         self.wait()
 
         summation_step_7 = MathTex(
-            r"=\lim_{n \to \infty} \sum_{i=1}^{n} \sqrt{(1 + (\frac{\Delta y}{\Delta x})^2}\Delta x"
+            r"=\lim_{n \to \infty} \sum_{i=1}^{n} \sqrt{(1 + (\frac{\Delta y}{\Delta x})^2)}\Delta x"
         ).next_to(summation_step_6, DOWN, buff=0.2)
         self.play(Write(summation_step_7))
         self.wait()
 
         summation_step_8 = MathTex(
             r"s=\int_{a}^{b}",
-            r"\sqrt{(1 + \frac{dy}{dx}^2}dx",
+            r"\sqrt{(1 + \frac{dy}{dx}^2)}dx",
         ).next_to(summation_step_7, DOWN, buff=0.2)
         self.play(Write(summation_step_8))
         self.wait()
 
         summation_step_9 = MathTex(
             r"s=\int_{a}^{b}",
-            r"\sqrt{(1 + {f'(x)}^2}dx",
+            r"\sqrt{(1 + {f'(x)}^2)}dx",
         ).next_to(summation_step_8, DOWN, buff=0.2)
         self.play(Write(summation_step_9))
         self.wait()
